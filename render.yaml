@@ -1,0 +1,35 @@
+services:
+  # -------------------------
+  # BACKEND WEB SERVICE
+  # -------------------------
+  - type: web
+    name: interviewprep-backend
+    env: docker
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  # -------------------------
+  # FRONTEND STATIC SITE
+  # -------------------------
+  - type: web
+    name: interviewprep-frontend
+    env: static
+    plan: free
+    buildCommand: cd Frontend && npm install && npm run build
+    staticPublishPath: ./Frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: interviewprep-backend
+          envVarKey: RENDER_EXTERNAL_URL
