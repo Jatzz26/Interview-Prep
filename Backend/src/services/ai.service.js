@@ -42,21 +42,66 @@ const interviewReportSchema = z.object({
 async function generateInterviewReport({ resume, jobDescription, selfDescription }) {
 
     const prompt = `
-        generate an interview report for the given job description, resume and self description
+        You are an expert technical interviewer.
+        Generate an interview report for the given job description, resume and self description.
+        You MUST strictly return a JSON object. Do not include any other text.
+        The JSON object MUST have EXACTLY this structure:
+        {
+            "matchScore": 85,
+            "title": "Job Title",
+            "technicalQuestions": [
+                {
+                    "question": "technical question",
+                    "answer": "ideal answer",
+                    "intention": "intention of the question"
+                }
+            ],
+            "behaviouralQuestions": [
+                {
+                    "question": "behavioural question",
+                    "answer": "ideal answer",
+                    "intention": "intention of the question"
+                }
+            ],
+            "skillGaps": [
+                {
+                    "skill": "missing skill",
+                    "severity": "high or medium or low"
+                }
+            ],
+            "preparationPlan": [
+                {
+                    "day": 1,
+                    "focus": "focus area",
+                    "tasks": ["task1", "task2"]
+                }
+            ]
+        }
 
         jobDescription: ${jobDescription}
         resume: ${resume}
         selfDescription: ${selfDescription}
     `;
 
-    const response = await genai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema)
+    let response;
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            response = await genai.models.generateContent({
+                model: "gemini-2.5-flash-lite",
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+            break; // Success, exit retry loop
+        } catch (error) {
+            retries--;
+            if (retries === 0) throw error; // If all retries fail, throw the error
+            console.log(`Gemini API 503 error. Retrying... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
         }
-    })
+    }
 
     return JSON.parse(response.text);
 }
@@ -92,20 +137,36 @@ async function generateResumePdf({ resume, jobDescription, selfDescription }) {
                         Self Description: ${selfDescription}
                         Job Description: ${jobDescription}
 
-                        The response should be a JSON object with a single field "html" which contains the HTML content of the resume.
+                        You MUST strictly return a JSON object with a single field "html" containing the HTML content of the resume.
+                        The JSON object MUST have EXACTLY this structure:
+                        {
+                            "html": "<your complete html string here>"
+                        }
+                        
                         The resume should be tailored for the given job description and should highlight the candidate's strengths and relevant experience. 
                         The HTML content should be well-formatted, visually appealing, simple, and professional.
                         The content should be ATS friendly. Keep it 1-2 pages long.
                     `;
 
-    const response = await genai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(resumePdfSchema)
+    let response;
+    let retries = 3;
+    while (retries > 0) {
+        try {
+            response = await genai.models.generateContent({
+                model: "gemini-2.5-flash-lite",
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json"
+                }
+            });
+            break;
+        } catch (error) {
+            retries--;
+            if (retries === 0) throw error;
+            console.log(`Gemini API error. Retrying... (${retries} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
-    });
+    }
 
     const jsonContent = JSON.parse(response.text);
     const pdfBuffer = await generatePdfFromHtml(jsonContent.html);

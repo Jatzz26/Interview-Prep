@@ -1,4 +1,4 @@
-const pdfParse = require("pdf-parse");
+const { PDFParse } = require("pdf-parse");
 const { generateInterviewReport, generateResumePdf } = require("../services/ai.service");
 const InterviewReportModel = require("../models/interviewReport.model");
 
@@ -8,8 +8,10 @@ async function generateInterviewReportController(req, res) {
             return res.status(400).json({ success: false, message: "Resume file is required" });
         }
 
-        const pdfData = await pdfParse(req.file.buffer);
+        const parser = new PDFParse({ data: req.file.buffer });
+        const pdfData = await parser.getText();
         const resumeText = pdfData.text;
+        await parser.destroy();
         
         const { selfDescription, jobDescription } = req.body;
 
@@ -50,8 +52,10 @@ async function generateTailoredResumeController(req, res) {
             if (!req.file) {
                 return res.status(400).json({ success: false, message: "Resume file or resumeText is required" });
             }
-            const pdfData = await pdfParse(req.file.buffer);
+            const parser = new PDFParse({ data: req.file.buffer });
+            const pdfData = await parser.getText();
             resumeText = pdfData.text;
+            await parser.destroy();
         }
 
         const { selfDescription, jobDescription } = req.body;

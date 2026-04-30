@@ -124,3 +124,5 @@ const interviewReportSchema = new mongoose.Schema({
 }, {
     timestamps: true
 })
+
+module.exports = mongoose.model("InterviewReport", interviewReportSchema);
