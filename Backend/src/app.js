@@ -30,4 +30,8 @@ const interviewRouter = require('./routes/interview.routes');
 app.use('/api/auth', authRouter);
 app.use('/api/interview', interviewRouter);
 
+app.get('/', (req, res) => {
+    res.send('AI Interview Platform API is running successfully! 🚀');
+});
+
 module.exports = app;
