@@ -1,5 +1,7 @@
 # AI Interview Prep Platform
 
+🌟 **Live Demo:** [https://interview-prep-1-5dz1.onrender.com](https://interview-prep-1-5dz1.onrender.com)
+
 An intelligent, full-stack application designed to help job seekers prepare for interviews by leveraging the power of Generative AI. The platform analyzes resumes against job descriptions to generate tailored ATS-friendly resumes, comprehensive interview reports, technical/behavioral questions, and personalized preparation plans.
 
 ## 🚀 Features
